@@ -1,0 +1,720 @@
+# 일관된 백업 세트의 원자적 생성
+
+## `feat(backup): 백업 무결성과 비공개 파일 I/O 정의`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+new file mode 100644
+index 0000000..c5bd558
+--- /dev/null
++++ b/tools/stack_backup.py
+@@ -0,0 +1,63 @@
++#!/usr/bin/env python3
++"""Compose 프로젝트의 MariaDB와 WordPress 볼륨을 함께 백업하고 복원합니다."""
++
++from __future__ import annotations
++
++from contextlib import contextmanager
++import hashlib
++import os
++from pathlib import Path
++from typing import BinaryIO, Iterator
++
++
++NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
++DIRECTORY = getattr(os, "O_DIRECTORY", 0)
++NONBLOCK = getattr(os, "O_NONBLOCK", 0)
++
++
++class BackupError(RuntimeError):
++    pass
++
++
++def sha256_stream(stream: BinaryIO) -> str:
++    digest = hashlib.sha256()
++    stream.seek(0)
++    for chunk in iter(lambda: stream.read(1024 * 1024), b""):
++        digest.update(chunk)
++    stream.seek(0)
++    return digest.hexdigest()
++
++
++def sha256(path: Path) -> str:
++    with path.open("rb") as stream:
++        return sha256_stream(stream)
++
++
++def fsync_directory(path: Path) -> None:
++    descriptor = os.open(path, os.O_RDONLY | DIRECTORY | NOFOLLOW)
++    try:
++        os.fsync(descriptor)
++    finally:
++        os.close(descriptor)
++
++
++def write_private(path: Path, data: bytes) -> None:
++    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
++    with os.fdopen(descriptor, "wb") as stream:
++        stream.write(data)
++        stream.flush()
++        os.fsync(stream.fileno())
++
++
++@contextmanager
++def private_output(path: Path) -> Iterator[BinaryIO]:
++    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
++    try:
++        with os.fdopen(descriptor, "wb") as stream:
++            descriptor = -1
++            yield stream
++            stream.flush()
++            os.fsync(stream.fileno())
++    finally:
++        if descriptor >= 0:
++            os.close(descriptor)
+
+
+## `feat(backup): 관리 작업 신호와 테스트 중단 경계 추가`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+index c5bd558..82f7e83 100644
+--- a/tools/stack_backup.py
++++ b/tools/stack_backup.py
+@@ -7,9 +7,13 @@ from contextlib import contextmanager
+ import hashlib
+ import os
+ from pathlib import Path
++import signal
++import time
+ from typing import BinaryIO, Iterator
+ 
+ 
++FAILURE_STAGES = ("database-dump", "database-restore")
++PAUSE_STAGES = ("backup-stop", "database-restore")
+ NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+ DIRECTORY = getattr(os, "O_DIRECTORY", 0)
+ NONBLOCK = getattr(os, "O_NONBLOCK", 0)
+@@ -41,6 +45,66 @@ def fsync_directory(path: Path) -> None:
+         os.close(descriptor)
+ 
+ 
++def maybe_fail(requested: str | None, stage: str) -> None:
++    if requested == stage:
++        raise BackupError(f"실패 주입: {stage}")
++
++
++def pause_for_test(requested: str | None, stage: str, ready_file: Path | None) -> None:
++    if requested != stage:
++        return
++    if ready_file is None:
++        raise BackupError("일시정지 준비 파일이 지정되지 않았습니다")
++    ready_file = ready_file.expanduser()
++    if not ready_file.is_absolute():
++        ready_file = Path.cwd() / ready_file
++    blocked_signals = {signal.SIGINT, signal.SIGTERM}
++    previous_mask = signal.pthread_sigmask(signal.SIG_BLOCK, blocked_signals)
++    owns_ready_file = False
++    mask_restored = False
++    try:
++        descriptor = os.open(
++            ready_file,
++            os.O_WRONLY | os.O_CREAT | os.O_EXCL | NOFOLLOW,
++            0o600,
++        )
++        owns_ready_file = True
++        try:
++            os.write(descriptor, (stage + "\n").encode())
++            os.fsync(descriptor)
++        finally:
++            os.close(descriptor)
++        signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
++        mask_restored = True
++        while True:
++            time.sleep(3600)
++    finally:
++        if not mask_restored:
++            signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
++        if owns_ready_file:
++            try:
++                ready_file.unlink()
++            except FileNotFoundError:
++                pass
++
++
++@contextmanager
++def operation_signal_handlers() -> Iterator[None]:
++    previous_handlers: dict[signal.Signals, object] = {}
++
++    def interrupt(signum: int, _frame: object) -> None:
++        signal_name = signal.Signals(signum).name
++        raise BackupError(f"{signal_name} 신호로 관리 작업이 중단되었습니다")
++
++    for current_signal in (signal.SIGINT, signal.SIGTERM):
++        previous_handlers[current_signal] = signal.signal(current_signal, interrupt)
++    try:
++        yield
++    finally:
++        for current_signal, previous in previous_handlers.items():
++            signal.signal(current_signal, previous)
++
++
+ def write_private(path: Path, data: bytes) -> None:
+     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+     with os.fdopen(descriptor, "wb") as stream:
+
+
+## `feat(backup): 백업용 Compose 실행 어댑터 추가`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+index 82f7e83..b4bb823 100644
+--- a/tools/stack_backup.py
++++ b/tools/stack_backup.py
+@@ -5,18 +5,27 @@ from __future__ import annotations
+ 
+ from contextlib import contextmanager
+ import hashlib
++import json
+ import os
+ from pathlib import Path
++import re
+ import signal
++import subprocess
+ import time
+ from typing import BinaryIO, Iterator
+ 
+ 
++ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_COMPOSE_FILE = ROOT / "srcs" / "docker-compose.yml"
++PROJECT_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{2,62}$")
+ FAILURE_STAGES = ("database-dump", "database-restore")
+ PAUSE_STAGES = ("backup-stop", "database-restore")
+ NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+ DIRECTORY = getattr(os, "O_DIRECTORY", 0)
+ NONBLOCK = getattr(os, "O_NONBLOCK", 0)
++QUERY_TIMEOUT_SECONDS = 30
++CONTROL_TIMEOUT_SECONDS = 360
++TRANSFER_TIMEOUT_SECONDS = 3600
+ 
+ 
+ class BackupError(RuntimeError):
+@@ -125,3 +134,90 @@ def private_output(path: Path) -> Iterator[BinaryIO]:
+     finally:
+         if descriptor >= 0:
+             os.close(descriptor)
++
++
++class ComposeProject:
++    def __init__(self, project: str, env_file: Path, compose_file: Path) -> None:
++        if not PROJECT_PATTERN.fullmatch(project):
++            raise BackupError("프로젝트 이름은 소문자·숫자·밑줄·하이픈 3~63자여야 합니다")
++        self.project = project
++        self.env_file = env_file.resolve(strict=True)
++        self.compose_file = compose_file.resolve(strict=True)
++        self.timeout = CONTROL_TIMEOUT_SECONDS
++
++    def command(self, *arguments: str) -> list[str]:
++        return [
++            "docker",
++            "compose",
++            "--project-name",
++            self.project,
++            "--env-file",
++            str(self.env_file),
++            "--file",
++            str(self.compose_file),
++            *arguments,
++        ]
++
++    def run(
++        self,
++        *arguments: str,
++        input_data: bytes | None = None,
++        input_stream: BinaryIO | None = None,
++        output_stream: BinaryIO | None = None,
++        capture: bool = False,
++        check: bool = True,
++        timeout: int = CONTROL_TIMEOUT_SECONDS,
++    ) -> subprocess.CompletedProcess[bytes]:
++        if input_data is not None and input_stream is not None:
++            raise BackupError("subprocess 입력 형식을 하나만 지정해야 합니다")
++        if output_stream is not None and capture:
++            raise BackupError("subprocess 출력을 스트림과 메모리에 동시에 받을 수 없습니다")
++        try:
++            return subprocess.run(
++                self.command(*arguments),
++                cwd=ROOT,
++                input=input_data,
++                stdin=input_stream,
++                stdout=output_stream if output_stream is not None else (
++                    subprocess.PIPE if capture else None
++                ),
++                stderr=subprocess.PIPE if capture else None,
++                check=check,
++                timeout=timeout,
++            )
++        except subprocess.TimeoutExpired as error:
++            operation = arguments[0] if arguments else "command"
++            raise BackupError(
++                f"Compose {operation} 명령이 {timeout}초 안에 끝나지 않았습니다"
++            ) from error
++
++    def config(self) -> dict[str, object]:
++        result = self.run(
++            "config",
++            "--format",
++            "json",
++            capture=True,
++            timeout=QUERY_TIMEOUT_SECONDS,
++        )
++        try:
++            parsed = json.loads(result.stdout)
++        except (UnicodeDecodeError, json.JSONDecodeError) as error:
++            raise BackupError(f"Compose 설정 JSON을 읽을 수 없습니다: {error}") from error
++        if not isinstance(parsed, dict):
++            raise BackupError("Compose 설정이 객체 형식이 아닙니다")
++        return parsed
++
++    def running_services(self) -> set[str]:
++        result = self.run(
++            "ps",
++            "--status",
++            "running",
++            "--services",
++            capture=True,
++            timeout=QUERY_TIMEOUT_SECONDS,
++        )
++        return {
++            line
++            for line in result.stdout.decode(errors="replace").splitlines()
++            if line
++        }
+
+
+## `feat(backup): WordPress 아카이브 입력 검증`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+index b4bb823..eee277a 100644
+--- a/tools/stack_backup.py
++++ b/tools/stack_backup.py
+@@ -7,10 +7,11 @@ from contextlib import contextmanager
+ import hashlib
+ import json
+ import os
+-from pathlib import Path
++from pathlib import Path, PurePosixPath
+ import re
+ import signal
+ import subprocess
++import tarfile
+ import time
+ from typing import BinaryIO, Iterator
+ 
+@@ -221,3 +222,32 @@ class ComposeProject:
+             for line in result.stdout.decode(errors="replace").splitlines()
+             if line
+         }
++
++
++def validate_archive_stream(stream: BinaryIO) -> None:
++    try:
++        stream.seek(0)
++        with tarfile.open(fileobj=stream, mode="r:gz") as archive:
++            members = archive.getmembers()
++            if not members:
++                raise BackupError("WordPress 아카이브가 비어 있습니다")
++            seen: set[str] = set()
++            for member in members:
++                member_path = PurePosixPath(member.name)
++                if member_path.is_absolute() or ".." in member_path.parts:
++                    raise BackupError(f"안전하지 않은 아카이브 경로입니다: {member.name}")
++                normalized = member_path.as_posix()
++                if normalized in seen:
++                    raise BackupError(f"중복된 아카이브 경로입니다: {member.name}")
++                seen.add(normalized)
++                if not (member.isdir() or member.isfile()):
++                    raise BackupError(f"지원하지 않는 아카이브 항목입니다: {member.name}")
++    except (tarfile.TarError, OSError) as error:
++        raise BackupError(f"WordPress 아카이브를 읽을 수 없습니다: {error}") from error
++    finally:
++        stream.seek(0)
++
++
++def validate_archive(path: Path) -> None:
++    with path.open("rb") as stream:
++        validate_archive_stream(stream)
+
+
+## `feat(backup): 프로젝트별 백업 작업 잠금 적용`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+index eee277a..506fce8 100644
+--- a/tools/stack_backup.py
++++ b/tools/stack_backup.py
+@@ -4,12 +4,14 @@
+ from __future__ import annotations
+ 
+ from contextlib import contextmanager
++import fcntl
+ import hashlib
+ import json
+ import os
+ from pathlib import Path, PurePosixPath
+ import re
+ import signal
++import stat
+ import subprocess
+ import tarfile
+ import time
+@@ -251,3 +253,51 @@ def validate_archive_stream(stream: BinaryIO) -> None:
+ def validate_archive(path: Path) -> None:
+     with path.open("rb") as stream:
+         validate_archive_stream(stream)
++
++
++@contextmanager
++def project_operation_lock(project_name: str) -> Iterator[None]:
++    lock_directory = Path("/tmp") / f"container-stack-operation-locks-{os.getuid()}"
++    try:
++        lock_directory.mkdir(mode=0o700)
++    except FileExistsError:
++        pass
++    try:
++        directory_info = os.lstat(lock_directory)
++    except OSError as error:
++        raise BackupError("관리 작업 잠금 디렉터리를 확인할 수 없습니다") from error
++    if (
++        not stat.S_ISDIR(directory_info.st_mode)
++        or directory_info.st_uid != os.getuid()
++        or stat.S_IMODE(directory_info.st_mode) & 0o077
++    ):
++        raise BackupError("관리 작업 잠금 디렉터리 권한이 안전하지 않습니다")
++    directory_descriptor = os.open(
++        lock_directory,
++        os.O_RDONLY | DIRECTORY | NOFOLLOW,
++    )
++    lock_name = hashlib.sha256(project_name.encode("utf-8")).hexdigest() + ".lock"
++    lock_descriptor: int | None = None
++    try:
++        lock_descriptor = os.open(
++            lock_name,
++            os.O_RDWR | os.O_CREAT | NOFOLLOW,
++            0o600,
++            dir_fd=directory_descriptor,
++        )
++        os.fchmod(lock_descriptor, 0o600)
++        lock_info = os.fstat(lock_descriptor)
++        if not stat.S_ISREG(lock_info.st_mode) or lock_info.st_uid != os.getuid():
++            raise BackupError("관리 작업 잠금 파일이 안전하지 않습니다")
++        try:
++            fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
++        except BlockingIOError as error:
++            raise BackupError("같은 프로젝트의 다른 관리 작업이 실행 중입니다") from error
++        try:
++            yield
++        finally:
++            fcntl.flock(lock_descriptor, fcntl.LOCK_UN)
++    finally:
++        if lock_descriptor is not None:
++            os.close(lock_descriptor)
++        os.close(directory_descriptor)
+
+
+## `feat(backup): DB 덤프와 WordPress 볼륨 수집`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+index 506fce8..9a09ec2 100644
+--- a/tools/stack_backup.py
++++ b/tools/stack_backup.py
+@@ -17,6 +17,8 @@ import tarfile
+ import time
+ from typing import BinaryIO, Iterator
+ 
++from stack_runtime import secret_payload
++
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ DEFAULT_COMPOSE_FILE = ROOT / "srcs" / "docker-compose.yml"
+@@ -301,3 +303,61 @@ def project_operation_lock(project_name: str) -> Iterator[None]:
+         if lock_descriptor is not None:
+             os.close(lock_descriptor)
+         os.close(directory_descriptor)
++
++
++def validate_database_dump(path: Path) -> None:
++    with path.open("rb") as stream:
++        prefix = stream.read(1024 * 1024)
++    if not prefix.startswith(b"/*M!") and b"CREATE DATABASE" not in prefix:
++        raise BackupError("MariaDB 덤프가 예상한 SQL 형식이 아닙니다")
++
++
++def database_dump(
++    project: ComposeProject, destination: Path, root_password: str
++) -> None:
++    with private_output(destination) as output:
++        project.run(
++            "exec",
++            "--no-TTY",
++            "mariadb",
++            "sh",
++            "-ceu",
++            "umask 077; auth=\"$(mktemp /run/container-stack-dump.XXXXXX)\"; "
++            "trap 'rm -f -- \"$auth\"' EXIT HUP INT TERM; "
++            "IFS= read -r password; "
++            "printf '[client]\\npassword=\"%s\"\\n' \"$password\" >\"$auth\"; "
++            "mariadb-dump --defaults-extra-file=\"$auth\" "
++            "--socket=/run/mysqld/mysqld.sock -uroot --single-transaction "
++            "--routines --events --triggers --hex-blob --add-drop-database "
++            "--databases \"$MYSQL_DATABASE\"",
++            input_data=secret_payload(root_password),
++            output_stream=output,
++            timeout=TRANSFER_TIMEOUT_SECONDS,
++        )
++    validate_database_dump(destination)
++
++
++def wordpress_archive(project: ComposeProject, destination: Path) -> None:
++    with private_output(destination) as output:
++        project.run(
++            "run",
++            "--rm",
++            "--no-TTY",
++            "--no-deps",
++            "--entrypoint",
++            "tar",
++            "wordpress",
++            "-C",
++            "/var/www",
++            "-czf",
++            "-",
++            "--exclude=html/wp-config.php",
++            "html",
++            "config",
++            output_stream=output,
++            timeout=TRANSFER_TIMEOUT_SECONDS,
++        )
++    with destination.open("rb") as stream:
++        magic = stream.read(2)
++    if magic != b"\x1f\x8b":
++        raise BackupError("WordPress 볼륨 아카이브가 gzip 형식이 아닙니다")
+
+
+## `feat(backup): 백업 출력 경로를 안전하게 예약`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+index 9a09ec2..124d902 100644
+--- a/tools/stack_backup.py
++++ b/tools/stack_backup.py
+@@ -361,3 +361,30 @@ def wordpress_archive(project: ComposeProject, destination: Path) -> None:
+         magic = stream.read(2)
+     if magic != b"\x1f\x8b":
+         raise BackupError("WordPress 볼륨 아카이브가 gzip 형식이 아닙니다")
++
++
++def normalize_backup_output(requested: Path) -> Path:
++    expanded = requested.expanduser()
++    if not expanded.is_absolute():
++        expanded = Path.cwd() / expanded
++    if expanded.name in ("", ".", ".."):
++        raise BackupError("백업 출력 이름이 올바르지 않습니다")
++    try:
++        parent = expanded.parent.resolve(strict=True)
++    except OSError as error:
++        raise BackupError("백업 출력의 상위 디렉터리가 없습니다") from error
++    if not parent.is_dir():
++        raise BackupError("백업 출력의 상위 경로가 디렉터리가 아닙니다")
++    return parent / expanded.name
++
++
++def same_directory(path: Path, expected: os.stat_result) -> bool:
++    try:
++        actual = os.lstat(path)
++    except FileNotFoundError:
++        return False
++    return (
++        stat.S_ISDIR(actual.st_mode)
++        and actual.st_dev == expected.st_dev
++        and actual.st_ino == expected.st_ino
++    )
+
+
+## `feat(backup): 백업 세트를 원자적으로 게시`
+
+diff --git a/tools/stack_backup.py b/tools/stack_backup.py
+index 124d902..19427f3 100644
+--- a/tools/stack_backup.py
++++ b/tools/stack_backup.py
+@@ -4,24 +4,34 @@
+ from __future__ import annotations
+ 
+ from contextlib import contextmanager
++from datetime import datetime, timezone
+ import fcntl
+ import hashlib
+ import json
+ import os
+ from pathlib import Path, PurePosixPath
+ import re
++import shutil
+ import signal
+ import stat
+ import subprocess
+ import tarfile
++import tempfile
+ import time
+ from typing import BinaryIO, Iterator
+ 
+-from stack_runtime import secret_payload
++from stack_runtime import (
++    load_secret_values,
++    secret_payload,
++)
+ 
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ DEFAULT_COMPOSE_FILE = ROOT / "srcs" / "docker-compose.yml"
++DATABASE_DUMP = "database.sql"
++WORDPRESS_ARCHIVE = "wordpress.tar.gz"
++MANIFEST = "manifest.json"
++EXPECTED_FILES = {DATABASE_DUMP, WORDPRESS_ARCHIVE, MANIFEST}
+ PROJECT_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{2,62}$")
+ FAILURE_STAGES = ("database-dump", "database-restore")
+ PAUSE_STAGES = ("backup-stop", "database-restore")
+@@ -388,3 +398,137 @@ def same_directory(path: Path, expected: os.stat_result) -> bool:
+         and actual.st_dev == expected.st_dev
+         and actual.st_ino == expected.st_ino
+     )
++
++
++def _create_backup(
++    project: ComposeProject,
++    output: Path,
++    failure_stage: str | None = None,
++    pause_stage: str | None = None,
++    pause_ready_file: Path | None = None,
++) -> None:
++    secrets = load_secret_values(project)
++    running = project.running_services()
++    expected_services = {"mariadb", "wordpress", "nginx"}
++    if running != expected_services:
++        raise BackupError(
++            "백업은 세 서비스가 모두 실행 중일 때만 시작할 수 있습니다: "
++            f"{sorted(running)}"
++        )
++    output = normalize_backup_output(output)
++    try:
++        output.mkdir(mode=0o700)
++    except FileExistsError as error:
++        raise BackupError("백업 출력 경로가 이미 존재합니다") from error
++    reservation = os.lstat(output)
++    fsync_directory(output.parent)
++    temporary: Path | None = None
++    published = False
++    stopped = False
++    original_error: BaseException | None = None
++    try:
++        temporary = Path(
++            tempfile.mkdtemp(prefix=f".{output.name}.tmp-", dir=str(output.parent))
++        )
++        stopped = True
++        project.run(
++            "stop",
++            "nginx",
++            "wordpress",
++            timeout=CONTROL_TIMEOUT_SECONDS,
++        )
++        pause_for_test(pause_stage, "backup-stop", pause_ready_file)
++        database_dump(
++            project,
++            temporary / DATABASE_DUMP,
++            secrets["db_root_password"],
++        )
++        maybe_fail(failure_stage, "database-dump")
++        wordpress_archive(project, temporary / WORDPRESS_ARCHIVE)
++        manifest = {
++            "format": 1,
++            "created_at": datetime.now(timezone.utc).isoformat(),
++            "project": project.project,
++            "sha256": {
++                DATABASE_DUMP: sha256(temporary / DATABASE_DUMP),
++                WORDPRESS_ARCHIVE: sha256(temporary / WORDPRESS_ARCHIVE),
++            },
++        }
++        write_private(
++            temporary / MANIFEST,
++            (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode(),
++        )
++        validate_archive(temporary / WORDPRESS_ARCHIVE)
++        fsync_directory(temporary)
++        if not same_directory(output, reservation) or any(output.iterdir()):
++            raise BackupError("백업 출력 예약 경로가 변경되었습니다")
++        os.replace(temporary, output)
++        published = True
++        fsync_directory(output.parent)
++        project.run(
++            "up",
++            "--detach",
++            "--wait",
++            "--wait-timeout",
++            "240",
++            timeout=CONTROL_TIMEOUT_SECONDS,
++        )
++        stopped = False
++    except BaseException as error:
++        original_error = error
++        raise
++    finally:
++        recovery_error = ""
++        if stopped:
++            try:
++                result = project.run(
++                    "up",
++                    "--detach",
++                    "--wait",
++                    "--wait-timeout",
++                    "240",
++                    capture=True,
++                    check=False,
++                    timeout=CONTROL_TIMEOUT_SECONDS,
++                )
++                if result.returncode != 0:
++                    recovery_error = (
++                        result.stderr.decode(errors="replace").strip()
++                        or "docker compose up이 실패했습니다"
++                    )
++            except BackupError as error:
++                recovery_error = str(error)
++        if temporary is not None and temporary.exists():
++            shutil.rmtree(temporary)
++        reservation_removed = False
++        if not published and same_directory(output, reservation):
++            try:
++                output.rmdir()
++                reservation_removed = True
++            except OSError:
++                pass
++        if reservation_removed:
++            fsync_directory(output.parent)
++        if recovery_error:
++            raise BackupError(
++                f"백업 작업 뒤 서비스를 복구하지 못했습니다: {recovery_error}"
++            ) from original_error
++    print(f"백업을 생성했습니다: {output}")
++
++
++def create_backup(
++    project: ComposeProject,
++    output: Path,
++    failure_stage: str | None = None,
++    pause_stage: str | None = None,
++    pause_ready_file: Path | None = None,
++) -> None:
++    with operation_signal_handlers():
++        with project_operation_lock(project.project):
++            _create_backup(
++                project,
++                output,
++                failure_stage,
++                pause_stage,
++                pause_ready_file,
++            )
+
+
