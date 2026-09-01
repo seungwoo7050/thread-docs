@@ -1,0 +1,61 @@
+project path: /Users/woopinbell/Desktop/working/project/audience-foundry/publishing-control-plane
+## 01. 승인 기반 멱등 게시 파이프라인 / Approval-Gated Idempotent Publication Pipeline
+92d96f47068dbf0464211b9acf41dc9547562671
+5cde980b51f0bda67e52f12056beaad069a72cdd
+3226d9764e2887e32f82e0256ec6998cc77b4791
+3ea10d8fed78e341baf78a90f5082a84c1e44139
+82660f6ac35a2da68cb4e023ce1548894cb4ca43
+## 02. 정규 콘텐츠 계약과 입력 검증 / Canonical Content Contracts and Input Validation
+4c63d3f0ddc25fcff5c6dc4d89eb71a7ce070310
+54d17c504585dd1b39fa932344c6e8c05b3e0ed6
+## 03. 로컬 Git 편집 워크플로 / Local Git Editorial Workflow
+f49ed9cb908216f665cafd2d297f4818915e104e
+0010a75442b1b0f47173cb23df9a7e05b20b6d23
+c2e4a582239fc170e7e9351264a4b734f53d3090
+## 04. 사이트 주도 게시 라우팅 / Site-Driven Publication Routing
+4c63d3f0ddc25fcff5c6dc4d89eb71a7ce070310
+c2e4a582239fc170e7e9351264a4b734f53d3090
+3ea10d8fed78e341baf78a90f5082a84c1e44139
+82660f6ac35a2da68cb4e023ce1548894cb4ca43
+## 05. 불변 소스 승인 수명 주기 / Immutable Source Approval Lifecycle
+af5765b51724a99b977724aec878eab353bf42b0
+733f2eda2f5de3d97129cd075c53b9fffd772216
+98f68a79a8a4c2cfd18bb159423c154b29588b5d
+2aaa27eef9f5db88b53242122903dbafb8fa7788
+f736167285b77466c7972bd0315b4168e02d818c
+5cde980b51f0bda67e52f12056beaad069a72cdd
+## 06. 감사 증거와 원자적 게시 기록 / Audit Evidence and Atomic Publication Records
+af5765b51724a99b977724aec878eab353bf42b0
+c5d7a206390a21a61af288145285f708df5d8ccf
+98f68a79a8a4c2cfd18bb159423c154b29588b5d
+84e349c0d89a1e9403be38088e445f08014d7041
+d767ac2c3ed2ba35098078af0e75d7ef3ebe3df4
+e3b8dd3ab591c9ec64e4804313a5ec8bce861e0d
+## 07. 정적 릴리스 투영과 결정적 컴파일 / Static Release Projection and Deterministic Compilation
+19d6813a0d44978ab49067da1262a5c40bb63b56
+2fc0b8806dca9ed5ce1eb0484c44a38cf56b75b8
+9447606e81eb74ae12cbb1a7db4f834700b12d6f
+a62af56dde3f7dc9d6a7bee0ec7f81e83e7b2dc8
+## 08. 동결 정적 렌더러 통합 경계 / Frozen Static Renderer Integration Boundary
+2553a45a54d532a86a0426da6d01d4a9c540a3ad
+3b6b3855a6c46982a1711cb860c13398536e12fc
+3b94cad353efcd2783de91fb9b39549a709c79b5
+6019ff898805d0fd5e780fc42be88c0d8dc03e4c
+3ea10d8fed78e341baf78a90f5082a84c1e44139
+9130c1c8bfe7bfb968351d1f88bd7ef265cfc519
+## 09. WordPress 초안 멱등성과 식별자 보존 / WordPress Draft Idempotency and Identity Preservation
+c2e4a582239fc170e7e9351264a4b734f53d3090
+fb55fba7071d676afe095db2af0ad253890dbafd
+3226d9764e2887e32f82e0256ec6998cc77b4791
+## 10. WordPress 런타임과 전송 계층 격리 / WordPress Runtime and Transport Isolation
+ec2a238f20c599fdc54a19671ba361f2725151b3
+c2e4a582239fc170e7e9351264a4b734f53d3090
+d2067c072b7d45ca2188c8a09d2e2b62039720a6
+3da96dfaaa4bc1f25eb9baed0b904f66d74352f7
+b44d2c67c39d969e74b26688f14831c184096a2b
+3ea10d8fed78e341baf78a90f5082a84c1e44139
+b15ebeccace8502d156b0173d2de6bf8800fd21c
+## 11. 로컬 저장소 무결성 게이트 / Local Repository Integrity Gate
+54d17c504585dd1b39fa932344c6e8c05b3e0ed6
+c5d7a206390a21a61af288145285f708df5d8ccf
+d20eed695e4c5e5cba5e51e7327507eb53ebd60d

@@ -1,0 +1,75 @@
+project path: /Users/woopinbell/Desktop/working/workflow/web-systems-evolution
+branch: track/industry-spring
+## 1. E01 최소 Monitor와 동기 Check / Minimal Monitor and Synchronous Check
+5312d564a08b20c74d2b7f9e79370d4b25881895
+00e774d6f0157eb28b5d77e44ba13e542becc8c8
+c3495c1478182bbea5bc47d78301e0bfa5275ab9
+## 2. E02 HTTP 런타임 계약과 오류 경계 / HTTP Runtime Contracts and Error Boundaries
+66f2dea9c074e0f341604fee4f1c9e897df93ab3
+89e1badc7a9a407248167e0d9df1752d0561cfe9
+e51deb7770ae4790b013259b8112f03b116e3bf6
+3aef68e3b873efea811a5f29f4009450ce74500e
+## 3. E03 PostgreSQL 영속성, Migration과 Canonical Mapping / PostgreSQL Persistence, Migrations, and Canonical Mapping
+55bbe369c6517439b7207c2c933be483d76b590c
+fb966626a14ea376fd5000e63fb7f5d10d67c1e5
+711b03ce0dd652970019dd72ef80cbb2b9c6256e
+45711aaa58b311065e0cea423bc53d283e1d4fa9
+## 4. E04 세션 인증과 수명주기 / Session Authentication and Lifecycle
+b2fa7ed33bf7918572b80e3e4bb2545772806499
+409c5a6380b5ecd940c684fed20108e9cc9c73e1
+c59551aeb8e5a351b7d875489578f31caea6f160
+## 5. E05 Monitor 소유권, IDOR와 브라우저 상태 변경 보호 / Monitor Ownership, IDOR, and Browser Mutation Protection
+3c58da6f02e6cd454f3e29c4818718ab9981f59f
+1e1a9efe6504c6878e90f415f4b6d1400b029841
+5931e21e87e15cecb91992d6138d3ec0e464dc27
+ef470a301358932a77457d714c79494e631a8f96
+## 6. E06 Server-State Cache와 Mutation Invalidation / Server-State Cache and Mutation Invalidation
+58b210c78e86926b647bdacb69a36cf8232eed89
+e84607a5f0326f08ba92b75273661b99aaa9d2f5
+d2abc8a44e38a05660e49ce664de6f38f8831edd
+## 7. E07 CheckRun 이력, Cursor와 URL 상태 / CheckRun History, Cursors, and URL State
+c3078656483e1bd393369528a8d1bec23c4c6f95
+1194d1fed2fca60267e068466f7c1a34fdc23de7
+50f633fe194c079db0cc438cac1a517702aef234
+## 8. E08 Server Rendering, Hydration과 접근 가능한 Browser 경계 / Server Rendering, Hydration, and Accessible Browser Boundaries
+2cd6a87a0a93ecc7f42866ca2314a4f83d8d2592
+cf4a3a5ace4c6105be1450711aa91704cb094664
+0330d7741bbc0193af193be70d9dac47bfdb134f
+## 9. E09 예약 Check와 Worker 분리 / Scheduled Checks and Worker Separation
+56f01c4c61717cc993cf6aed863cd9567fa1e075
+112a23d58569598091afb8b08e790969f2356d08
+3cc49f3d2a35055c92d0312fca6167c89dfadec5
+## 10. E10 실행 소유권, 중복 Claim과 요청 멱등성 / Execution Ownership, Duplicate Claims, and Request Idempotency
+bbacf6924f6a8c6fe87185c5f0b91317ca17b3a1
+e299b206f3c56653966a96f479e40d970730ae1e
+3a1adae83fb192337fb9fbc3432a2f5ad13ca2a5
+b9cfba5829db0b3837a1af1df7be9b48e133359e
+887ff7842566a7d65618c645a1f9faa6d539aba3
+808394b4c26d3ee4bab9d6989ffe3e63f182354a
+d51673b78cd4702584741e12f80c15af9f34cd4d
+## 11. E11 Worker Crash Recovery, Lease와 Graceful Shutdown / Worker Crash Recovery, Leases, and Graceful Shutdown
+ca63bec86d56bdbf4385db2a777a28aa1e487a3a
+26389c3eb2d0b8cbc23d81b1ff7088d5b391180c
+f7adf9b58c31d97aab932bbf28044503d0be6b66
+1b168ca405b0b69fd1409a68bf8d1e3f65ea23bd
+## 12. E12 URL 정규화, SSRF와 외부 자원 제한 / URL Canonicalization, SSRF, and Outbound Resource Limits
+d2fdc3c2c9d6e51ed53e389f3014432055f4972a
+595dd9980c8a36660ab641e79a9e8f91c1320a0f
+d9b0f36904c4a86391793db83a19269e9b01f8f8
+b309d2f8b6de8b81c5936906e296f314441646bc
+## 13. E20 CheckRun Query Plan과 Index 선택 / CheckRun Query Plans and Index Selection
+8a6a423a72a0e3596008f20c13575336fa22aebb
+563b325ef871fe6d1fbfef7cf39a6581f2d0a94d
+## 14. E24 Readiness, Metrics, Structured Logs와 Production Container / Readiness, Metrics, Structured Logs, and Production Containers
+76da0e24a5f64647a111762717f2507f39ccb45a
+d74a594e0be190ce0db9c75fe973899e15763593
+f043423c27887ba4342dd92528a0759250be5ce1
+2dbe240409db95ac0435f8a4d4270189f60b7d82
+ec098b1bf81c0a6b62a13c553409d6ccd65d7cb9
+c02df6cb866199af7059f98e8ea2069072c9ef28
+c97c2320e5a0909036f8fa1e13c666cd58f0669e
+8fc57c7279b9e3f2b8ce92f8ce446b164cc4ae43
+aa5cf9b932baacbe888915d438c4982daf7d1483
+155fff249c5d55a5573508a4905be080890879c8
+f4538a54cf1d47658f59e632784779bca26bdaff
+4bbabf4335b7a4cb3b2129343a3d769eab2547a3

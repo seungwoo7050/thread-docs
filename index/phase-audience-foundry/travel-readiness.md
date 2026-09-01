@@ -1,0 +1,166 @@
+project path: /Users/woopinbell/Desktop/content-foundry-worktree/audience-foundry-travel-readiness/
+# Ⅰ. 애플리케이션·증거 기반 
+## Application and Evidence Foundations 
+## 01. 실패 폐쇄형 Django 애플리케이션 셸 / Fail-Closed Django Application Shell
+9dfa352aab2b749fdc5821ea8c72535c05a35b09
+d8b8615736d2579e5555327b8ca14ba16f67ba63
+2dce61ec3fb2da42f0deef1b6ee0855d93c9e810
+4456eab543e8a8a24041754ee63fabee3fabc5e9
+9b09bf2ea9ab0dbe17f6bbea1ee543733b1c1368 
+## 02. 권리 검토 기반 출처 수명 주기 / Rights-Governed Source Lifecycle
+bb46a02536c0b2fed6807cf0ff37b98c7295dc68
+a3d779f484093b2df593af4899228c95aecf3cfd
+d83e894094e86ed6d6cc1a4488de0c159afffcf1
+2986879490bcc6185cc2653fc440668e2b836402 
+## 03. 원문 비보존 증거 상태 머신과 결정적 재현 / Raw-Free Evidence State Machine and Deterministic Replay
+9b227649597f29e6576f70a30f1679158c48638e
+c440be36c332cbcf44ba6f4c10c4f054e5d58da6
+235f3341f633564a258fc012bf9cbf779b1d422e
+decc719ddfba9b09526e35b6724399c692ba9105
+c393abfe9ca95c5f17d55d4d7f6ff99109da7d5e
+9d34ac3eee7543f643c5c37a870ea167e2642895
+084ca1f02c91ee720684b9a3602aa341c7a003e5
+629bb0bca51aa4d8952bd39d57bb209bcff0a593 
+## 04. 출처 계약에 묶인 제한형 단일 호출 수집기 / Contract-Bound Bounded Single-Call Collectors
+2977d092e58c6971ee92578c0711726a713e07a6
+4341556b0eb204cd88c8b45ae1131ef8f12a5556
+753690c156f13201e55774a0853f277d9302c7c0 
+## 05. 불변 국가·공항 정체성과 지원 범위 확장 / Immutable Country and Airport Identity with Scope Expansion
+c4c3564e2c50673501151206b2379a387152fe2e
+a70becbc4779502a2d738fd75e26372ff7ad0d4a
+38b28c1a5e34543b32dffc83e866b53d07ff367a
+9a297502366d749096c2b4a297210cd5a49bf7ec
+4f070ff3fcc41bc77e6bfd6c856e35323b6de30c 
+# Ⅱ. 입국·여행경보 사실 파이프라인 
+## Entry and Warning Fact Pipelines 
+## 06. 입국요건 CSV의 엄격 파싱과 내구성 있는 수집 / Strict Entry CSV Parsing and Durable Ingestion
+c982f0b21017d526b0f7260e20ef532a54a3ed05
+2697145715468174b5752f93d0f95536dc2ed993
+fd7884936f3a05890bd850a1ada835f078866ee1
+dd2d42069eda945e8c6fc60e410b0b761d0eb131
+9d15c7c5ecc08f8d0cad427a2fc04f3115bdb08c 
+## 07. 여행경보의 단일 사실에서 완전 국가 스냅샷으로의 진화 / Travel Warnings from Single Facts to Complete Country Snapshots
+4b2bbc8922441b8fae57fedee0445014ddfae57c
+3384af7e9f358a0f381b56f89b3b1900c23cd5d0
+57575ed758f1bc09726d23b1eac7c48e6326ead2
+00a10d7c6315393f75071ec99ff1fd37ca98505b
+e0cc6f08b4a28f40d13fe997b14b48a70a11c5f5
+58bbc07a50d2ccb133ba795ad16a5866ab141037
+71d57ad43d511a3b73faa6dda570f019e2a4adf6
+2d23c1018471bbefbd36ecd2a2bb40e90733eb61
+ebebe801eeef208a40feaf1d8602a80f815f79f3 
+## 08. 입국요건·여행경보의 운영자 검수와 원자적 게시·롤백 / Operator Review, Atomic Publication, and Rollback for Entry and Warning Facts
+8f85a698430ea29e2dae0155a2c4dbf02ffb0200
+da076d5f33ec396f5332a71c54e8ce6138444a87
+9fc0ef410ae3aeae51d37791cffded18f2ac2aa5
+fae72f82a727660e13db41a2686193922742a5e5
+80804cf883dde0657ec7975d02a08b991444ed28
+866e4836148f7f388e69205fa63400e9f55d3278 
+## 09. 입국요건·여행경보의 독립 게시 읽기 모델과 신선도 판정 / Independent Publication Read Models and Freshness for Entry and Warning Facts
+da7ab029e5f77273b6e96394dfa20ad60949ec0e
+b66182a332de2f3766b2f7197c17b85bd0a4e471
+342f615680e6130f839dc6c057a71c929411be52
+aada41beeebd85e89e851f9b05944b3a6486ec35
+f6aa61d3ac81e0ddae5c1a2ab9aed7f2ae3078c4
+04a891ec79094619bd9c3f2c5363325e4091ff3f
+7a0b9fbf48c3243efc113a92013def1fdc91663d
+45232a9fc57d2b2799fdf487c8292ccab7e408c0 
+# Ⅲ. 항공 근거와 추천 엔진 
+## Aviation Evidence and Recommendation Engine 
+## 10. 순서 보존 항공 증거 수집과 계약 버전 관리 / Ordered Aviation Evidence Collection and Contract Versioning
+38b28c1a5e34543b32dffc83e866b53d07ff367a
+629bb0bca51aa4d8952bd39d57bb209bcff0a593
+753690c156f13201e55774a0853f277d9302c7c0
+95e4c46e0d26e67ed4bd9a1439d6630e8f0a7395
+4a60049a4b90e800391348cefcfe85cfb6a7058b
+cc2aa3f4e9f85135ad131e0514d7b0a981c71522
+089f3d6b041f7c10d5be3436fe80ca5d8063ad32
+033889d56e2245927c4213aeccb6ef494b4425e3
+9a297502366d749096c2b4a297210cd5a49bf7ec 
+## 11. 공식 아카이브 기반 노선별 비행시간 산출 / Route Duration Derivation from Official Archives
+61e98a1bec5498c7428ed41e14ad25cfff92b2f4
+f3075b5d22c8c796b7e19b6f63981cdd665a79b5
+5d06f327b2f4f32d8b10a17ea7668d4df710d0f2
+9411949b283ccd7d265f6e79d981f1ba1269885b
+563d086ec6d3804a3397643b0909a3dca9d831f6 
+## 12. 봉인된 항공 후보의 검수·게시·롤백 / Sealed Flight Candidate Review, Publication, and Rollback
+38b28c1a5e34543b32dffc83e866b53d07ff367a
+70e47ab69a55f50ee5ecb8413917b92433e7ad59
+7437bfe8c5a7bdd81f70de22fe8ae429ad4f8bc1
+0a3f04a7d6f3773a7285e87dfd1839b8b7b43054
+254c0a4f4a4978a251aea8c52e32696119755824
+1b2a0df539e74377433517f4b0c629265dc5620b
+883c158df23a19d8fec7437fe9560671b1ea5ed6 
+## 13. 교차 검증된 게시 증거 기반 여행 기회 계산과 순위화 / Travel Opportunity Calculation and Ranking over Cross-Validated Publications
+df09b7e9a542ae0a452aedacaccb316b74295351
+20cd99e51920c8e852430c366d8c506fcb9b95cf
+094f2a515c008d7f8c00f566bb68a2a4547e4f9c
+95f7468072b22eccc8c6d18c79a04b43aca0896d
+e95140468528d3775d1f16f0ddb8d6bac3103faf
+5edb437efce19bd1e8d5444ce63ebe64e4061468 
+# Ⅳ. 공개 웹 경험과 검증 
+## Public Web Experience and Verification 
+## 14. 저장하지 않는 여행 시간창 요청 경계 / No-Retention Travel-Window Request Boundary
+deb920846fe444b4c5e1beb8f0f1f733bc61510b
+d83788a3996233ee381180869a9b9771f7389770
+b7141319368d79cc2702bad0a777022eb21b20e2
+472bde01e9c47ca766a92919fad8b7fa88394515
+43d75afcc2bf9b2de1625d63b571e707d4400f3e
+0a5a186cbab1ba96d6acd57269e9f6d40c8e14fd 
+## 15. 공식 근거 중심 여행 브리핑과 목적지 비교 UI / Evidence-Centered Travel Briefing and Destination Comparison UI
+fb7e1c96cd03c024a74639be4366e4c284f1a3b5
+878de99d37eec80ab2ee126c59cea81f56074d77
+cf4b0baacb02e7a97d1c9f431b6f7a8d6e480a7c
+60170113ce6ba3432ef7f325bef879f9031a4fc0
+816dff20e66a886e21ad2b746c3edfeb5043057d
+8927f2f46d3ed5560870dc99b7e6892cb9ef8185
+cd81b7a5e57ab910cf88f27d837fa7cec535365a
+eaa11827a934edefe79660f8393596b38bc98d86
+21b9fa8f6ca7aeb0afa336f581c426cc5d5846f4
+39eb21cb3053a591e8fd1649a289a131b1c7449b
+d2436f14ff4b9948983af8a851c93bc0da2f447a 
+## 16. 재현 가능한 브라우저 인수 검증 / Reproducible Browser Acceptance Verification
+61aebd88b7de2cb35146abcfd207f81db81651d5
+30d70c70eba39adf4f31994c12d4504c360f4289
+d83788a3996233ee381180869a9b9771f7389770
+c21d25efd467be8349479af9e69093331431a793
+a0c59e45e92ee4d76469d46976c6841f208fc1d6
+ce91da8f66955e22a39e75263c1cb04a29763173
+aa17ea945ac8265ce4a44c632170d98fd7984227
+d321c5edba8c75ff0a84669c3e671f0304007a82
+554dccce21603e76afca386368a8738beb7b96eb 
+# Ⅴ. 운영·릴리스 재현성 
+## Operations and Release Reproducibility 
+## 17. 제한된 상태 신호·신선도 감시·비식별 텔레메트리 / Bounded Health Signals, Freshness Monitoring, and Redacted Telemetry
+1c6358ccf37df1ce152c7e89cecd6dc81e7d8df9
+0077f6a786f6c1f84246fc190ebc6db1639372de
+351b182a9578ffa43226569fe1e0edcfcaad9243
+f6aa61d3ac81e0ddae5c1a2ab9aed7f2ae3078c4
+544b1feaf74ecb9ef74d231e02761df06e33b465
+0e7a45ef4b84be367c5ca84f76191ebd784a6f49
+14d801688068908aa4d6bbf30b64c3fe83e89708
+1cff6a241d61c7cb286b9ae7e9990c5d026b6a1e 
+## 18. 결정적 릴리스 산출물과 재현 가능한 런타임 / Deterministic Release Artifacts and Reproducible Runtime
+9dfa352aab2b749fdc5821ea8c72535c05a35b09
+eb10145b3865c1dfa18c614639e895da2d8b8999
+7b42a6aa87a42dd985959334edde9ed4d036b414
+7c226236c9dd920015f4a782cd81bedf5f333448
+8402118af64d7920c5d99f233d58ef4c768635e0
+e8c703120190157c97bafa7ab9df62d4e712226e
+7c6a23a96ed742270085c25bb7f05700806542da
+3a67e65ac8d2f83dbd2bef4624a7cc622a746594 
+## 19. Git·DB·산출물·런타임을 가로지르는 민감정보 부재 검증 / Cross-Surface Sensitive-Data Absence Verification
+001ee495989e219fb0399b701619ac47c93248cc
+61b30d26a45dbec1d3196351e619296b532b7467
+e850bee3f461f8685bcffcd25bb0f18438d08036
+955e30665a28c0c32d431eb60e4ea67ea17bcbcd
+32c85cbe2625bb4b043c2a801c7ac726b54f7014 
+## 20. PostgreSQL 정확 백업·복구 리허설 / Exact PostgreSQL Backup and Restore Rehearsal
+816b56ca8c6798b7f63306099f99f3d5bf9a2fdb
+e246ae33d7e1b45ce24e259c1e81f21051f7ec23
+f9a0051566cb4702aa40ae18c26537f809ff29c8
+4b9d31f91b931b0f9ca1328a1fd2391db6b11f4d
+7f14d4476d62241cb8121fdfd3682b4f420c2182
+5204a15c888f267d93560bf03792294ef3d968b1
+afdcf734e077ab9abd4f005a8e422ea758459fd9
+725ce593927bbaabcde00186eca6dc21646c980d
